@@ -11,7 +11,7 @@ const Layout = () => {
                 <div className={styles.headerContainer}>
                     <img src="sasai-logo.png" width="200px" height="auto"></img>
                     <Link to="/" className={styles.headerTitleContainer}>
-                        <h3 className={styles.headerTitle}>Sasai Buddy</h3>
+                        <h3 className={styles.headerTitle}>Sasai Sage</h3>
                     </Link>
                     <nav>
                         <ul className={styles.headerNavList}>
