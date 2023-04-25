@@ -133,7 +133,7 @@ const OneShot = () => {
         <div className={styles.oneshotContainer}>
             <div className={styles.oneshotTopSection}>
                 <SettingsButton className={styles.settingsButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
-                <h1 className={styles.oneshotTitle}>Ask your data</h1>
+                <h1 className={styles.oneshotTitle}>Ask anything related to Sasai</h1>
                 <div className={styles.oneshotQuestionInput}>
                     <QuestionInput
                         placeholder="Example: How to send money using Sasai Superapp?"
