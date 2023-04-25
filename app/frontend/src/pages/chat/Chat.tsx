@@ -181,7 +181,7 @@ const Chat = () => {
                     <div className={styles.chatInput}>
                         <QuestionInput
                             clearOnSend
-                            placeholder="Type a new question (e.g. How to login in Sasai Superapp?)"
+                            placeholder="Type a new question (e.g. How to send money using Sasai superapp?)"
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                         />
