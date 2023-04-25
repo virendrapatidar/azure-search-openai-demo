@@ -20,11 +20,11 @@ const Layout = () => {
                                     Chat with Sasai
                                 </NavLink>
                             </li>
-                            <li className={styles.headerNavLeftMargin}>
+                            {/* <li className={styles.headerNavLeftMargin}>
                                 <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     Ask Sasai
                                 </NavLink>
-                            </li>
+                            </li> */}
                         </ul>
                     </nav>
                     {/* <h4 className={styles.headerRightText}>Azure OpenAI + Cognitive Search</h4> */}
