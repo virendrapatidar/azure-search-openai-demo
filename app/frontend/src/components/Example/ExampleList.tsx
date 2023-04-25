@@ -13,7 +13,7 @@ const EXAMPLES: ExampleModel[] = [
         value: "What is Sasai Payment Gateway?"
     },
     { text: "Is Sasai Payment Gateway Secure?", value: "Is Sasai Payment Gateway Secure?" },
-    { text: "How does Sasai Payment Gateway works", value: "How does Sasai Payment Gateway works?" }
+    { text: "How does Sasai Payment Gateway works", value: "How does Sasai Payment Gateway work?" }
 ];
 
 interface Props {
