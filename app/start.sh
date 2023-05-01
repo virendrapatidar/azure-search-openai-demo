@@ -56,6 +56,7 @@ echo "Starting backend"
 echo ""
 
 cd ../backend
+# rm -rf :sqllitedatabase
 # open http://127.0.0.1:5000
 ./backend_env/bin/python ./app.py
 if [ $? -ne 0 ]; then

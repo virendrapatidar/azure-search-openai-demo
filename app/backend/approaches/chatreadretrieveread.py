@@ -1,8 +1,11 @@
 import openai
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
+from flask import jsonify
 from approaches.approach import Approach
 from text import nonewlines
+from approaches.sql import SqlApproach
+import re
 
 # Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
 # top documents from search, then constructs a prompt with them, and then uses OpenAI to generate an completion 
@@ -10,6 +13,7 @@ from text import nonewlines
 class ChatReadRetrieveReadApproach(Approach):
     prompt_prefix = """<|im_start|>system
 Your name is "Sasai Sage" and responding to questions asked by Sasai Employee or Customers. Be brief in your answers.
+If questions are asked related to payment, balance, amount, transactions, payer, order, bank, remittance then search in sql database.
 Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
 For tabular information return it as an html table. Do not return markdown format.
 Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brakets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
@@ -26,7 +30,7 @@ Sources:
     Try not to repeat questions that have already been asked.
     Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'"""
 
-    query_prompt_template = """Below is a history of the conversation so far, and a new question asked by the user that needs to be answered by searching in a knowledge base about employee healthcare plans and the employee handbook.
+    query_prompt_template = """Below is a history of the conversation so far, and a new question asked by the user that needs to be answered by searching in a knowledge base.
     Generate a search query based on the conversation and the new question. 
     Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
     Do not include any text inside [] or <<>> in the search query terms.
@@ -48,6 +52,18 @@ Search query:
         self.sourcepage_field = sourcepage_field
         self.content_field = content_field
 
+    def extract_intent(self, text):
+        response = openai.Completion.create(
+        engine="davinci",
+        prompt=f"Extract the intent from the following text: '{text}'. You can concise your output to one word out of transaction or general \nIntent:",
+        max_tokens=1,
+        n=1,
+        stop=None,
+        temperature=0.5,
+        )
+        intent = response.choices[0].text.strip()
+        return intent        
+
     def run(self, history: list[dict], overrides: dict) -> any:
         use_semantic_captions = True if overrides.get("semantic_captions") else False
         top = overrides.get("top") or 3
@@ -64,26 +80,37 @@ Search query:
             n=1, 
             stop=["\n"])
         q = completion.choices[0].text
-
-        # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
-        if overrides.get("semantic_ranker"):
-            r = self.search_client.search(q, 
-                                          filter=filter,
-                                          query_type=QueryType.SEMANTIC, 
-                                          query_language="en-us", 
-                                          query_speller="lexicon", 
-                                          semantic_configuration_name="default", 
-                                          top=top, 
-                                          query_caption="extractive|highlight-false" if use_semantic_captions else None)
+        intent = self.extract_intent(q)
+        print ("intent")
+        print (intent)        
+        # sql_keywords = ['transaction', 'order', 'payer', 'amount', 'balance', 'payee', 'remittance', 'max', 'min', 'last']        
+        # if re.compile('|'.join(sql_keywords),re.IGNORECASE).search(q):    
+        if intent.lower() == "transaction":
+            impl = SqlApproach(self.chatgpt_deployment, self.gpt_deployment)            
+            content = impl.run(history, overrides)    
+            results = content        
         else:
-            r = self.search_client.search(q, filter=filter, top=top)
-        if use_semantic_captions:
-            results = [doc[self.sourcepage_field] + ": " + nonewlines(" . ".join([c.text for c in doc['@search.captions']])) for doc in r]
-        else:
-            results = [doc[self.sourcepage_field] + ": " + nonewlines(doc[self.content_field]) for doc in r]
-        content = "\n".join(results)
+            # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
+            if overrides.get("semantic_ranker"):
+                r = self.search_client.search(q, 
+                                            filter=filter,
+                                            query_type=QueryType.SEMANTIC, 
+                                            query_language="en-us", 
+                                            query_speller="lexicon", 
+                                            semantic_configuration_name="default", 
+                                            top=top, 
+                                            query_caption="extractive|highlight-false" if use_semantic_captions else None)
+            else:
+                r = self.search_client.search(q, filter=filter, top=top)
+            if use_semantic_captions:
+                results = [doc[self.sourcepage_field] + ": " + nonewlines(" . ".join([c.text for c in doc['@search.captions']])) for doc in r]
+            else:
+                results = [doc[self.sourcepage_field] + ": " + nonewlines(doc[self.content_field]) for doc in r]
+            content = "\n".join(results)
 
         follow_up_questions_prompt = self.follow_up_questions_prompt_content if overrides.get("suggest_followup_questions") else ""
+        print ("content")
+        print (content)
         
         # Allow client to replace the entire prompt, or to inject into the exiting prompt using >>>
         prompt_override = overrides.get("prompt_template")
@@ -94,6 +121,9 @@ Search query:
         else:
             prompt = prompt_override.format(sources=content, chat_history=self.get_chat_history_as_text(history), follow_up_questions_prompt=follow_up_questions_prompt)
 
+        if intent.lower() == "transaction":    
+            prompt = prompt  + "\n display records in html tabular format" 
+
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
         completion = openai.Completion.create(
             engine=self.chatgpt_deployment, 
@@ -102,6 +132,8 @@ Search query:
             max_tokens=1024, 
             n=1, 
             stop=["<|im_end|>", "<|im_start|>"])
+        print ("completion")
+        print (completion)
 
         return {"data_points": results, "answer": completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
     
