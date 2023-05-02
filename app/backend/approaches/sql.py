@@ -8,6 +8,8 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import text
 import urllib.parse
+import logging
+import json
 urllib.parse.quote_plus("123")
 
 
@@ -48,6 +50,15 @@ class SqlApproach(Approach):
         )
         with self.temp_db.connect() as conn:
             query = f"SELECT {response.choices[0].text}"
-            records = conn.execute(text(query)).fetchall()           
-            return str(records)
-           
+            print("query = " + query)
+            try:
+                records = conn.execute(text(query)).fetchall()
+                # retValue =  json.dumps( [dict(ix) for ix in records] )
+                # print ("retValue = " + retValue)
+                # return retValue
+                # print ("records = " + str(records))
+                return str(records)
+
+            except Exception as e:
+                logging.exception("Exception in sql query", e)
+                return "Not able to fetch record(s)"
