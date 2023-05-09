@@ -16,7 +16,6 @@ class ChatReadRetrieveReadApproach(Approach):
     prompt_prefix = """<|im_start|>system
 Your name is "Sasai Sage" and responding to questions asked by Sasai Employee or Customers. Be brief in your answers.
 For tabular information, return it as an html table. Do not return markdown format.
-Show csv and json information in html table.
 If questions are asked related to payment, balance, amount, transaction, payer, order, bank, remittance then search in sql database.
 Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
 Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brakets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
@@ -57,12 +56,13 @@ Search query:
 
     def extract_intent(self, text):
         response = openai.Completion.create(
-            engine="davinci",
-            prompt=f"Extract the intent from the following text: '{text}'. You can concise your output to one word out of transaction or general \nIntent:",
+            engine="chat",
+            prompt=f"Provide intent of the user input. you can classify intent in 2 category.  first is “general” and other is “transaction” . We use general intent for document search and transaction intent to query database to search user transactions. Transaction intent is user specific while general intent is not.  Answer everything general if user input is not having a context of a user. Concise your answer to one word only.",
             max_tokens=1,
             n=1,
             stop=None,
-            temperature=0.5,
+            top=1,
+            temperature=0,
         )
         intent = response.choices[0].text.strip()
         return intent
@@ -86,15 +86,16 @@ Search query:
             n=1,
             stop=["\n"])
         q = completion.choices[0].text
-        # intent = self.extract_intent(q)
+        intent = self.extract_intent(q)
         # intent = "general"
-        sql_keywords = ['transaction', 'order', 'payer', 'amount',
-                        'balance', 'payee', 'remittance', 'max', 'min', 'last']
-        if re.compile('|'.join(sql_keywords), re.IGNORECASE).search(q):
-            # if intent.lower() == "transaction":
+        print ("Intent ", intent)
+        # sql_keywords = ['transaction', 'order', 'payer', 'amount',
+        #                 'balance', 'payee', 'remittance', 'max', 'min', 'last']
+        # if re.compile('|'.join(sql_keywords), re.IGNORECASE).search(q):
+        if intent.lower() == "transaction":
             impl = SqlApproach(self.chatgpt_deployment, self.gpt_deployment)
             content = impl.run(history, overrides)
-            results = content
+            results = ""
             # intent = "transaction"
         else:
             # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
