@@ -39,7 +39,6 @@ class SqlApproach(Approach):
         self.results = None
         response = openai.Completion.create(
             engine=self.chatgpt_deployment,
-            model=self.gpt_deployment,
             prompt=self.combine_prompts(self.transactions, q),
             temperature=0,
             max_tokens=150,

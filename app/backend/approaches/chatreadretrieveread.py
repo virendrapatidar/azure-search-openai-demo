@@ -56,13 +56,12 @@ Search query:
 
     def extract_intent(self, text):
         response = openai.Completion.create(
-            engine="chat",
-            prompt=f"Provide intent of the user input. you can classify intent in 2 category.  first is “general” and other is “transaction” . We use general intent for document search and transaction intent to query database to search user transactions. Transaction intent is user specific while general intent is not.  Answer everything general if user input is not having a context of a user. Concise your answer to one word only.",
+            engine=self.chatgpt_deployment,
+            prompt=f"Extract the intent from the following text: '{text}'. you can classify intent in 2 category. first is “general” and other is “transaction” . We use general intent for document search and transaction intent to query database to search user transactions. Transaction intent is user specific while general intent is not. Answer everything general if user input is not having a context of a user. Concise your answer to one word only. \nIntent:",
             max_tokens=1,
             n=1,
-            stop=None,
-            top=1,
-            temperature=0,
+            stop=["\n"],
+            temperature=0.5,
         )
         intent = response.choices[0].text.strip()
         return intent
@@ -95,7 +94,7 @@ Search query:
         if intent.lower() == "transaction":
             impl = SqlApproach(self.chatgpt_deployment, self.gpt_deployment)
             content = impl.run(history, overrides)
-            results = ""
+            results = content
             # intent = "transaction"
         else:
             # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
