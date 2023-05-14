@@ -4,7 +4,8 @@ from azure.search.documents.models import QueryType
 from flask import jsonify
 from approaches.approach import Approach
 from text import nonewlines
-from approaches.sql import SqlApproach
+from api.get_quotes import Quotes
+from api.openai_handler import OpenaiHandler
 import re
 
 # Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
@@ -16,7 +17,7 @@ class ChatReadRetrieveReadApproach(Approach):
     prompt_prefix = """<|im_start|>system
 Your name is "Sasai Sage" and responding to questions asked by Sasai Employee or Customers. Be brief in your answers.
 For tabular information, return it as an html table. Do not return markdown format.
-If questions are asked related to payment, balance, amount, transaction, payer, order, bank, remittance then search in sql database.
+Do not fetch any information from open AI public data source.
 Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
 Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brakets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
 {follow_up_questions_prompt}
@@ -53,18 +54,8 @@ Search query:
         self.gpt_deployment = gpt_deployment
         self.sourcepage_field = sourcepage_field
         self.content_field = content_field
-
-    def extract_intent(self, text):
-        response = openai.Completion.create(
-            engine=self.chatgpt_deployment,
-            prompt=f"Extract the intent from the following text: '{text}'. you can classify intent in 2 category. first is “general” and other is “transaction” . We use general intent for document search and transaction intent to query database to search user transactions. Transaction intent is user specific while general intent is not. Answer everything general if user input is not having a context of a user. Concise your answer to one word only. \nIntent:",
-            max_tokens=1,
-            n=1,
-            stop=["\n"],
-            temperature=0.5,
-        )
-        intent = response.choices[0].text.strip()
-        return intent
+        self.openai_handler =  OpenaiHandler(gpt_deployment, chatgpt_deployment)
+    
 
     def run(self, history: list[dict], overrides: dict) -> any:
         use_semantic_captions = True if overrides.get(
@@ -75,7 +66,7 @@ Search query:
             exclude_category.replace("'", "''")) if exclude_category else None
 
         # STEP 1: Generate an optimized keyword search query based on the chat history and the last question
-        prompt = self.query_prompt_template.format(chat_history=self.get_chat_history_as_text(
+        prompt = self.query_prompt_template.format(chat_history=self.openai_handler.get_chat_history_as_text(
             history, include_last_turn=False), question=history[-1]["user"])
         completion = openai.Completion.create(
             engine=self.gpt_deployment,
@@ -85,17 +76,13 @@ Search query:
             n=1,
             stop=["\n"])
         q = completion.choices[0].text
-        intent = self.extract_intent(q)
-        # intent = "general"
+        intent = self.openai_handler.get_intent(history)
         print ("Intent ", intent)
-        # sql_keywords = ['transaction', 'order', 'payer', 'amount',
-        #                 'balance', 'payee', 'remittance', 'max', 'min', 'last']
-        # if re.compile('|'.join(sql_keywords), re.IGNORECASE).search(q):
-        if intent.lower() == "transaction":
-            impl = SqlApproach(self.chatgpt_deployment, self.gpt_deployment)
+        if intent.lower() == "quote":
+            # Define prompt to ask for the amount, sending country, and receiving country
+            impl = Quotes(self.gpt_deployment, self.chatgpt_deployment)
             content = impl.run(history, overrides)
             results = content
-            # intent = "transaction"
         else:
             # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
             if overrides.get("semantic_ranker"):
@@ -119,19 +106,17 @@ Search query:
 
         follow_up_questions_prompt = self.follow_up_questions_prompt_content if overrides.get(
             "suggest_followup_questions") else ""
-        # print ("content")
-        # print (content)
-
+        
         # Allow client to replace the entire prompt, or to inject into the exiting prompt using >>>
         prompt_override = overrides.get("prompt_template")
         if prompt_override is None:
-            prompt = self.prompt_prefix.format(injected_prompt="", sources=content, chat_history=self.get_chat_history_as_text(
+            prompt = self.prompt_prefix.format(injected_prompt="", sources=content, chat_history=self.openai_handler.get_chat_history_as_text(
                 history), follow_up_questions_prompt=follow_up_questions_prompt)
         elif prompt_override.startswith(">>>"):
-            prompt = self.prompt_prefix.format(injected_prompt=prompt_override[3:] + "\n", sources=content, chat_history=self.get_chat_history_as_text(
+            prompt = self.prompt_prefix.format(injected_prompt=prompt_override[3:] + "\n", sources=content, chat_history=self.openai_handler.get_chat_history_as_text(
                 history), follow_up_questions_prompt=follow_up_questions_prompt)
         else:
-            prompt = prompt_override.format(sources=content, chat_history=self.get_chat_history_as_text(
+            prompt = prompt_override.format(sources=content, chat_history=self.openai_handler.get_chat_history_as_text(
                 history), follow_up_questions_prompt=follow_up_questions_prompt)
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
@@ -145,11 +130,5 @@ Search query:
 
         return {"data_points": results, "answer": completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
 
-    def get_chat_history_as_text(self, history, include_last_turn=True, approx_max_tokens=500) -> str:
-        history_text = ""
-        for h in reversed(history if include_last_turn else history[:-1]):
-            history_text = """<|im_start|>user""" + "\n" + h["user"] + "\n" + """<|im_end|>""" + "\n" + """<|im_start|>assistant""" + "\n" + (
-                h.get("bot") + """<|im_end|>""" if h.get("bot") else "") + "\n" + history_text
-            if len(history_text) > approx_max_tokens*4:
-                break
-        return history_text
+    
+    

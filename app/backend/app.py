@@ -40,6 +40,7 @@ openai.api_version = "2022-12-01"
 # Comment these two lines out if using keys, set your API key in the OPENAI_API_KEY environment variable instead
 openai.api_type = "azure_ad"
 openai_token = azure_credential.get_token("https://cognitiveservices.azure.com/.default")
+print("openai_token")
 openai.api_key = openai_token.token
 
 # Set up clients for Cognitive Search and Storage

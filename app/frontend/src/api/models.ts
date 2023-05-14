@@ -33,6 +33,7 @@ export type AskResponse = {
 export type ChatTurn = {
     user: string;
     bot?: string;
+    intent: string;
 };
 
 export type ChatRequest = {
