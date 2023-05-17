@@ -1,4 +1,5 @@
 import openai
+from flask import session
 
 class OpenaiHandler():
 
@@ -40,13 +41,16 @@ class OpenaiHandler():
                 break
         return history_text
     
-    def get_intent(self, history, include_last_turn=True) -> str:
-        intent = "general"
-        if len(history) ==  0:
-            intent = self.extract_intent(h)
-        for h in reversed(history if include_last_turn else history[:-1]):
-            intent = h.get("intent")
-            if intent == None or intent == "" :
+    def get_intent(self, history) -> str:  
+        intent = None
+        if 'intent' in session:
+            intent = session['intent']
+        if intent == None or intent == "" :
+            for h in reversed(history):                        
                 intent = self.extract_intent(h)
+                session['intent'] = intent
+                break
         return intent
 
+    def clear_intent(self) -> str:
+            session['intent'] = None

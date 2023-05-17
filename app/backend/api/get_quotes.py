@@ -29,20 +29,20 @@ class Quotes(Approach):
         """
         response = self.openai_handler.get_completion(quote_prompt)
         print("Bot:", response)
-        jsonStr = self.parse_values(history)
-        print ("jsonStr:" , jsonStr)
-
+        jsonStr = self.parse_values(history)        
         isValid = self.validate_json(jsonStr)
         print ("isValid:" , isValid)
         if(isValid):
-            return self.prepare_request(jsonStr)
+            response = self.prepare_request(jsonStr)
+            self.openai_handler.clear_intent()
+            return response
          
         return quote_prompt
 
 
     def parse_values(self, history) -> str:
         text_history = self.openai_handler.get_chat_history_as_text(history)
-        quote_prompt = """ Extract Sending country: <sending_country>, Receiving country: <receiving_country>, Amount: <amount> without currency code in json format. Do not return any other text with json        
+        quote_prompt = """ Extract Sending country: sending_country, Receiving country: receiving_country, Amount: amount without currency code in json format. Do not return any other text with json        
         """
         jsonStr = self.openai_handler.get_completion(text_history + quote_prompt)
         if(jsonStr.startswith("{")):
@@ -55,7 +55,7 @@ class Quotes(Approach):
     def  validate_json(self, jsonStr):
         if(jsonStr.startswith("{")):
             jsonObj = json.loads(jsonStr)
-            if((jsonObj["amount"] != None or jsonObj["amount"] > 0) and jsonObj["sending_country"] != None and jsonObj["receiving_country"] != None):
+            if((jsonObj["amount"] != None and float(jsonObj["amount"]) > 0) and jsonObj["sending_country"] != None and jsonObj["receiving_country"] != None):
                 return True
         return False
     
@@ -80,7 +80,7 @@ class Quotes(Approach):
         endpoint = "calculate/"
         amount = jsonObj["amount"]
         req_data = self.prepare_quotes_request_json(amount, receiving_country, receiving_currency, product, sending_country, sending_currency)
-        response = self.request_handler.post_request(endpoint, req_data)    
+        response = self.request_handler.post_request(endpoint, req_data)
         print("Response", response)
         return response 
 

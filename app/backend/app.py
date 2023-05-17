@@ -3,7 +3,7 @@ import mimetypes
 import time
 import logging
 import openai
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
 from approaches.retrievethenread import RetrieveThenReadApproach
@@ -66,6 +66,7 @@ chat_approaches = {
 }
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 @app.route("/", defaults={"path": "index.html"})
 @app.route("/<path:path>")
