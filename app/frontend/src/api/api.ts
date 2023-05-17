@@ -61,6 +61,12 @@ export async function chatApi(options: ChatRequest): Promise<AskResponse> {
     return parsedResponse;
 }
 
+export async function clear() {
+    const response = await fetch("/clear", {
+        method: "get"
+    });
+}
+
 export function getCitationFilePath(citation: string): string {
     return `/content/${citation}`;
 }

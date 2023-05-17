@@ -10,8 +10,8 @@ from approaches.retrievethenread import RetrieveThenReadApproach
 from approaches.readretrieveread import ReadRetrieveReadApproach
 from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
-from approaches.sql import SqlApproach
 from azure.storage.blob import BlobServiceClient
+from flask import session
 
 # Replace these with your own values, either in environment variables or directly here
 AZURE_STORAGE_ACCOUNT = os.environ.get("AZURE_STORAGE_ACCOUNT") or "mystorageaccount"
@@ -111,6 +111,14 @@ def chat():
     except Exception as e:
         logging.exception("Exception in /chat")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/clear", methods=["GET"])
+def clear():
+    print("Clearing session")
+    session.clear()
+    return ""
+    
+
 
 def ensure_openai_token():
     global openai_token

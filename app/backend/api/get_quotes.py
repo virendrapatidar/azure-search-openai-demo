@@ -55,7 +55,7 @@ class Quotes(Approach):
     def  validate_json(self, jsonStr):
         if(jsonStr.startswith("{")):
             jsonObj = json.loads(jsonStr)
-            if((jsonObj["amount"] != None and float(jsonObj["amount"]) > 0) and jsonObj["sending_country"] != None and jsonObj["receiving_country"] != None):
+            if((jsonObj["amount"] != "" and float(jsonObj["amount"]) > 0) and jsonObj["sending_country"] != "" and jsonObj["receiving_country"] != ""):
                 return True
         return False
     
