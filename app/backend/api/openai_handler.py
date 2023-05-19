@@ -32,7 +32,7 @@ class OpenaiHandler():
             temperature=1,
         )
         intent = response.choices[0].text.strip()
-        return intent    
+        return intent.lower() 
     
     def get_chat_history_as_text(self, history, include_last_turn=True, approx_max_tokens=500) -> str:
         history_text = ""
@@ -47,10 +47,11 @@ class OpenaiHandler():
         intent = None
         if 'intent' in session:
             intent = session['intent']
-        if intent == None or intent == "" or intent == "general":
+        if intent == None or intent == "" or intent == "\"" or intent.lower() == "general":
             for h in reversed(history):                        
                 intent = self.extract_intent(h.get("user"))
-                session['intent'] = intent                
+                session['intent'] = intent    
+                break            
         return intent
 
 

@@ -39,7 +39,8 @@ class Quotes(Approach):
         if(isValid):
             response = self.prepare_request(jsonStr)
             self.openai_handler.clear_intent()
-            return self.format_response(response)         
+            # return self.format_response(response)
+            return str(response)
         return quote_prompt
 
     def format_response(self, response):
@@ -60,9 +61,12 @@ class Quotes(Approach):
         
     def  validate_json(self, jsonStr):
         if(jsonStr.startswith("{")):
-            jsonObj = json.loads(jsonStr)
-            if((jsonObj["amount"] != "" and float(jsonObj["amount"]) > 0) and jsonObj["sending_country"] != "" and jsonObj["receiving_country"] != ""):
-                return True
+            try:
+                jsonObj = json.loads(jsonStr)
+                if((jsonObj["amount"] != "" and float(jsonObj["amount"]) > 0) and jsonObj["sending_country"] != "" and jsonObj["receiving_country"] != ""):
+                    return True
+            except:
+                print("not valid json" + jsonStr)
         return False
     
     def prepare_request(self, jsonStr):
