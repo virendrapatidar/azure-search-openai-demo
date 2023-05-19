@@ -16,10 +16,9 @@ import re
 class ChatReadRetrieveReadApproach(Approach):
     prompt_prefix = """<|im_start|>system
 Your name is "Sasai Sage" and responding to questions asked by Sasai Employee or Customers. Be brief in your answers.
-For tabular information, return it as an html table. Do not return markdown format.
-Do not fetch any information from open AI public data source.
+For tabular or json information, return it as an html table. Do not return markdown format.
 Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
-Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brakets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
+Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
 {follow_up_questions_prompt}
 {injected_prompt}
 Sources:
@@ -77,8 +76,8 @@ Search query:
             stop=["\n"])
         q = completion.choices[0].text
         intent = self.openai_handler.get_intent(history)
-        print ("Intent ", intent)
-        if intent.lower() == "quote":
+        print ("Intent: ", intent)
+        if intent.lower() == "action":
             # Define prompt to ask for the amount, sending country, and receiving country
             impl = Quotes(self.gpt_deployment, self.chatgpt_deployment)
             content = impl.run(history, overrides)

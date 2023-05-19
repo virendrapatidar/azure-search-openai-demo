@@ -22,12 +22,14 @@ class OpenaiHandler():
 
     def extract_intent(self, text):
         response = openai.Completion.create(
-            engine=self.chatgpt_deployment,
-            prompt=f"Extract the intent from the following text: '{text}'. you can classify intent in 2 category. first is “general” and other is quote . We use general intent for document search and quote intent to get remittance quotations. Answer everything general if user input is not having a context of a user. Concise your answer to one word only. \nIntent:",
+            engine=self.gpt_deployment,
+            prompt=f"""Extract the intent from the following text: '{text}'. 
+            If user ask for Sasai products or services, use intent 'general'. If user wants to send money or ask to get quote, rates to transfer money remittance, use intent 'action'. 
+            Concise your answer to one word only. Intent:""",
             max_tokens=1,
             n=1,
             stop=["\n"],
-            temperature=0.5,
+            temperature=1,
         )
         intent = response.choices[0].text.strip()
         return intent    
@@ -45,12 +47,12 @@ class OpenaiHandler():
         intent = None
         if 'intent' in session:
             intent = session['intent']
-        if intent == None or intent == "" :
+        if intent == None or intent == "" or intent == "general":
             for h in reversed(history):                        
-                intent = self.extract_intent(h)
-                session['intent'] = intent
-                break
+                intent = self.extract_intent(h.get("user"))
+                session['intent'] = intent                
         return intent
+
 
     def clear_intent(self) -> str:
             session['intent'] = None

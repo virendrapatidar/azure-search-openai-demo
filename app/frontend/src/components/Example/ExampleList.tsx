@@ -12,7 +12,7 @@ const EXAMPLES: ExampleModel[] = [
     //     text: "How to login into Sasai super App?",
     //     value: "How to login into Sasai super App?"
     // },
-    { text: "Can I use ecocash card on Sasai?", value: "Can I use ecocash card on Sasai?" },
+    { text: "I want to send money", value: "I want to send money" },
     { text: "What are features supported in micro loan?", value: "What are features supported in micro loan?" },
     { text: "What are capabilities of Sasai Payment Gateway?", value: "What are capabilities of Sasai Payment Gateway?" }
 ];

@@ -20,10 +20,14 @@ class Quotes(Approach):
    
     # Define the function to handle the conversation with the user
     def run(self, history: str, overrides: dict) -> any:
-        quote_prompt = """ Ask below questions for quotes. All questions should get answer.
-        1. What is the sending country? It can be only South Africa or United Kingdom.
-        2. What is the receiving country?
-        3. How much money would you like to send?        
+        quote_prompt = """ Ask below questions for quotes. All questions should get answer from user.
+        
+        1. What is the sending country? It can be only South Africa or United Kingdom. If user enter any other country, apologize and take user input again.
+        2. What is the receiving country? It can be only India or Bangladesh. If user enter any other country, apologize and take user input again.
+        3. How much money would you like to send? It should be positive number.
+        
+        If user do not provide any of above information, then ask followup questions to enter the missing inputs.
+        
         Please provide your response in the following format
         "Sending country: <sending_country>, Receiving country: <receiving_country>, Amount: <amount>" 
         """
@@ -35,9 +39,13 @@ class Quotes(Approach):
         if(isValid):
             response = self.prepare_request(jsonStr)
             self.openai_handler.clear_intent()
-            return response
-         
+            return self.format_response(response)         
         return quote_prompt
+
+    def format_response(self, response):
+        response_prompt = "Show JSON response in html table format. \n " + str(response)
+        formatted_response = self.openai_handler.get_completion(response_prompt)
+        return formatted_response
 
 
     def parse_values(self, history) -> str:
@@ -47,9 +55,7 @@ class Quotes(Approach):
         jsonStr = self.openai_handler.get_completion(text_history + quote_prompt)
         if(jsonStr.startswith("{")):
             jsonStr = re.sub("\n","",jsonStr)
-            jsonStr = re.sub("<\|im_end\|>","",jsonStr)
-        
-        print("jsonStr:", jsonStr)            
+            jsonStr = re.sub("<\|im_end\|>","",jsonStr)        
         return jsonStr
         
     def  validate_json(self, jsonStr):
