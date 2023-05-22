@@ -71,13 +71,13 @@ class Quotes(Approach):
     
     def prepare_request(self, jsonStr):
         jsonObj = json.loads(jsonStr)
-        sending_country = 204  
-        sending_currency = 181                                
-        receiving_country = 101
-        receiving_currency = 68
-        product = 21            
+        sending_country = 0  
+        sending_currency = 0
+        receiving_country = 0
+        receiving_currency = 0
+        product = 0
 
-        if(jsonObj["sending_country"].lower() == "South Africa" or jsonObj["receiving_country"].lower() == "sa"):
+        if(jsonObj["sending_country"].lower() == "South Africa" or jsonObj["sending_country"].lower() == "sa"):
             if(jsonObj["receiving_country"].lower() == "india" or jsonObj["receiving_country"].lower() == "in"):
                 receiving_country = 101
                 receiving_currency = 68
@@ -128,7 +128,7 @@ class Quotes(Approach):
                 product = 27
                                   
 
-        elif(jsonObj["sending_country"].lower() == "United Kingdom" or jsonObj["receiving_country"].lower() == "uk"):
+        elif(jsonObj["sending_country"].lower() == "United Kingdom" or jsonObj["sending_country"].lower() == "uk"):
             sending_country = 232
             sending_currency = 53
             if(jsonObj["receiving_country"].lower() == "india" or jsonObj["receiving_country"].lower() == "in"):
@@ -179,8 +179,18 @@ class Quotes(Approach):
 
         endpoint = "calculate/"
         amount = jsonObj["amount"]
+
+        print("sending_country", sending_country)
+        print("sending_currency", sending_currency)
+        print("receiving_country", receiving_country)
+        print("receiving_currency", receiving_currency)
+        print("product", product)
+        print("amount", amount)
+
         req_data = self.prepare_quotes_request_json(amount, receiving_country, receiving_currency, product, sending_country, sending_currency)
-        response = self.request_handler.post_request(endpoint, req_data)
+        isUk = sending_country == 232
+        response = self.request_handler.post_request(endpoint, req_data, isUk)
+        print(response)
         responseAttr = response.get("data").get("attributes")
         required_json = {
             "sending_amount" : responseAttr.get("sending_amount"),            
