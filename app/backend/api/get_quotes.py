@@ -23,7 +23,7 @@ class Quotes(Approach):
         quote_prompt = """ Ask below questions for quotes. All questions should get answer from user.
         
         1. What is the sending country? It can be only South Africa or United Kingdom. If user enter any other country, apologize and take user input again.
-        2. What is the receiving country? It can be only India or Bangladesh. If user enter any other country, apologize and take user input again.
+        2. What is the receiving country? It can be only India, Kenya, Bangladesh, Zimbabwe, Botswana, China, Ethiopia, Pakistan or Ghana. If user enter any other country, apologize and take user input again.
         3. How much money would you like to send? It should be positive number.
         
         If user do not provide any of above information, then ask followup questions to enter the missing inputs.
@@ -71,28 +71,126 @@ class Quotes(Approach):
     
     def prepare_request(self, jsonStr):
         jsonObj = json.loads(jsonStr)
-        receiving_country = 101  # default india
-        receiving_currency = 68 # default india
-        product = 21 # default india
+        sending_country = 204  
+        sending_currency = 181                                
+        receiving_country = 101
+        receiving_currency = 68
+        product = 21            
 
-        if(jsonObj["receiving_country"].lower() == "india" or jsonObj["receiving_country"].lower() == "in"):
-            receiving_country = 101
-            receiving_currency = 68
-        
-        elif(jsonObj["receiving_country"].lower() == "bangladesh" or jsonObj["receiving_country"].lower() == "bd"):
-            receiving_country = 19
-            receiving_currency = 13
-            product = 60
+        if(jsonObj["sending_country"].lower() == "South Africa" or jsonObj["receiving_country"].lower() == "sa"):
+            if(jsonObj["receiving_country"].lower() == "india" or jsonObj["receiving_country"].lower() == "in"):
+                receiving_country = 101
+                receiving_currency = 68
+                product = 21                             
+            elif(jsonObj["receiving_country"].lower() == "bangladesh" or jsonObj["receiving_country"].lower() == "bd"):
+                receiving_country = 19
+                receiving_currency = 13
+                product = 60
+            elif(jsonObj["receiving_country"].lower() == "zimbabwe" or jsonObj["receiving_country"].lower() == "zw"):
+                receiving_country = 246
+                receiving_currency = 75
+                product = 24
+            elif(jsonObj["receiving_country"].lower() == "botswana" or jsonObj["receiving_country"].lower() == "bw"):
+                receiving_country = 29
+                receiving_currency = 24
+                product = 56
+            elif(jsonObj["receiving_country"].lower() == "burundi" or jsonObj["receiving_country"].lower() == "bi"):
+                receiving_country = 29
+                receiving_currency = 16
+                product = 231
+            elif(jsonObj["receiving_country"].lower() == "cameroon" or jsonObj["receiving_country"].lower() == "cm"):
+                receiving_country = 38
+                receiving_currency = 163
+                product = 57
+            elif(jsonObj["receiving_country"].lower() == "china" or jsonObj["receiving_country"].lower() == "cn"):
+                receiving_country = 86
+                receiving_currency = 34
+                product = 39
+            elif(jsonObj["receiving_country"].lower() == "congo" or jsonObj["receiving_country"].lower() == "cd"):
+                receiving_country = 51
+                receiving_currency = 153
+                product = 74
+            elif(jsonObj["receiving_country"].lower() == "ethiopia" or jsonObj["receiving_country"].lower() == "et"):
+                receiving_country = 251
+                receiving_currency = 49
+                product = 32
+            elif(jsonObj["receiving_country"].lower() == "ghana" or jsonObj["receiving_country"].lower() == "gh"):
+                receiving_country = 82
+                receiving_currency = 55
+                product = 49
+            elif(jsonObj["receiving_country"].lower() == "kenya" or jsonObj["receiving_country"].lower() == "ke"):
+                receiving_country = 114
+                receiving_currency = 75
+                product = 24
+            elif(jsonObj["receiving_country"].lower() == "pakistan" or jsonObj["receiving_country"].lower() == "pk"):
+                receiving_country = 167
+                receiving_currency = 119
+                product = 27
+                                  
 
-        sending_country = 204  # default SA
-        sending_currency = 181 # default SA
+        elif(jsonObj["sending_country"].lower() == "United Kingdom" or jsonObj["receiving_country"].lower() == "uk"):
+            sending_country = 232
+            sending_currency = 53
+            if(jsonObj["receiving_country"].lower() == "india" or jsonObj["receiving_country"].lower() == "in"):
+                receiving_country = 101
+                receiving_currency = 68
+                product = 29                             
+            elif(jsonObj["receiving_country"].lower() == "bangladesh" or jsonObj["receiving_country"].lower() == "bd"):
+                receiving_country = 19
+                receiving_currency = 13
+                product = 22
+            elif(jsonObj["receiving_country"].lower() == "zimbabwe" or jsonObj["receiving_country"].lower() == "zw"):
+                receiving_country = 19
+                receiving_currency = 153
+                product = 15
+            elif(jsonObj["receiving_country"].lower() == "botswana" or jsonObj["receiving_country"].lower() == "bw"):
+                receiving_country = 29
+                receiving_currency = 24
+                product = 85
+            elif(jsonObj["receiving_country"].lower() == "burundi" or jsonObj["receiving_country"].lower() == "bi"):
+                receiving_country = 29
+                receiving_currency = 16
+                product = 97
+            elif(jsonObj["receiving_country"].lower() == "cameroon" or jsonObj["receiving_country"].lower() == "cm"):
+                receiving_country = 38
+                receiving_currency = 163
+                product = 86
+            elif(jsonObj["receiving_country"].lower() == "china" or jsonObj["receiving_country"].lower() == "cn"):
+                receiving_country = 86
+                receiving_currency = 34
+                product = 67
+            elif(jsonObj["receiving_country"].lower() == "ethiopia" or jsonObj["receiving_country"].lower() == "et"):
+                receiving_country = 251
+                receiving_currency = 49
+                product = 62
+            elif(jsonObj["receiving_country"].lower() == "ghana" or jsonObj["receiving_country"].lower() == "gh"):
+                receiving_country = 82
+                receiving_currency = 55
+                product = 77
+            elif(jsonObj["receiving_country"].lower() == "kenya" or jsonObj["receiving_country"].lower() == "ke"):
+                receiving_country = 114
+                receiving_currency = 75
+                product = 24
+            elif(jsonObj["receiving_country"].lower() == "pakistan" or jsonObj["receiving_country"].lower() == "pk"):
+                receiving_country = 167
+                receiving_currency = 119
+                product = 34
+   
 
         endpoint = "calculate/"
         amount = jsonObj["amount"]
         req_data = self.prepare_quotes_request_json(amount, receiving_country, receiving_currency, product, sending_country, sending_currency)
         response = self.request_handler.post_request(endpoint, req_data)
-        print("Response", response)
-        return response 
+        responseAttr = response.get("data").get("attributes")
+        required_json = {
+            "sending_amount" : responseAttr.get("sending_amount"),            
+            "recipient_amount" : responseAttr.get("recipient_amount"),
+            "exchange_rate" : responseAttr.get("rate"),
+            "total_amount_to_pay" : float(responseAttr.get("amount_to_pay")) + float(responseAttr.get("vat")),
+            "fees" : responseAttr.get("fees"),
+            "vat" : responseAttr.get("vat")
+        }
+        return required_json
 
     def prepare_quotes_request_json(self, amount, receiving_country, receiving_currency, product, sending_country, sending_currency):
         quote_req_json = {
