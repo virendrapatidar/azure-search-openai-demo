@@ -34,7 +34,7 @@ class Quotes(Approach):
         Please provide your response in the following format
         "Sending country: <sending_country>, Receiving country: <receiving_country>, Amount: <amount>" 
         
-        This API is also used to calculate fee, exchange rate to send money.
+        Above input are also required to calculate fee, exchange rate etc.
         """
         response = self.openai_handler.get_completion(quote_prompt)
         print("Bot:", response)
@@ -67,10 +67,10 @@ class Quotes(Approach):
         jsonStr = re.sub("\n","",jsonStr)
         jsonStr = re.sub("<\|im_end\|>","",jsonStr)   
         print ("jsonStr: " + jsonStr)         
-        return jsonStr
+        return jsonStr.strip()
         
     def  validate_json(self, jsonStr):
-        if(jsonStr.startswith("{")):
+        if(jsonStr.startswith("{") and jsonStr.endswith("}")):
             try:
                 jsonObj = json.loads(jsonStr)
                 if((jsonObj["amount"] != "" and float(jsonObj["amount"]) > 0) 

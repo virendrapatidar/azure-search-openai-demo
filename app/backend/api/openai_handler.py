@@ -24,7 +24,8 @@ class OpenaiHandler():
         response = openai.Completion.create(
             engine=self.gpt_deployment,
             prompt=f"""Extract the intent from the following text: '{text}'. 
-            If user ask for Sasai products or services, use intent 'general'. If user wants to send money or ask to get quote, rates to transfer money remittance, use intent 'action'. 
+            If user ask for Sasai products or services, use intent 'general'. 
+            If user wants to send money, get quote, exchange rate, remittance fee etc then use intent 'action'. 
             Concise your answer to one word only. Intent:""",
             max_tokens=1,
             n=1,
