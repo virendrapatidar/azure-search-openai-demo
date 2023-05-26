@@ -47,7 +47,7 @@ class OpenaiHandler():
         intent = None
         if 'intent' in session:
             intent = session['intent']
-        if intent == None or intent == "" or intent == "\"" or intent.lower() == "general":
+        if intent == None or intent == "" or intent == "\"" or intent == "'" or intent.lower() == "general":
             for h in reversed(history):                        
                 intent = self.extract_intent(h.get("user"))
                 session['intent'] = intent    

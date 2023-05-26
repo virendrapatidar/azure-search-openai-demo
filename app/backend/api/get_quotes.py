@@ -66,7 +66,8 @@ class Quotes(Approach):
         jsonStr = self.openai_handler.get_completion(text_history + quote_prompt)
         if(jsonStr.startswith("{")):
             jsonStr = re.sub("\n","",jsonStr)
-            jsonStr = re.sub("<\|im_end\|>","",jsonStr)        
+            jsonStr = re.sub("<\|im_end\|>","",jsonStr)   
+        print ("jsonStr: " + jsonStr)         
         return jsonStr
         
     def  validate_json(self, jsonStr):
