@@ -24,7 +24,7 @@ class Quotes(Approach):
         
         1. What is the sending country? It can be only South Africa or United Kingdom. If user enter any other country, apologize and take user input again.
         2. What is the receiving country? 
-        If sending country United Kingdom then receiving country can be only Bangladesh, Botswana, Burundi, Cameroon, China, Ethiopia, Gambia, Ghana, India, Kenya, Malawi, Mozambique, Namibia, Nigeria, Pakistan, Phillippines, Rwanda, Senegal, Somalia, South Africa, Tanzania, Uganda, Zambia or Zimbabwe. 
+        If sending country United Kingdom then receiving country can be only Bangladesh, Botswana, Burundi, Cameroon, China, Ethiopia, Gambia, Ghana, India, Kenya, Malawi, Mozambique, Namibia, Nigeria, Pakistan, Philippines, Rwanda, Senegal, Somalia, South Africa, Tanzania, Uganda, Zambia or Zimbabwe. 
         If sending country South Africa then receiving country can be only Bangladesh, Botswana, Burundi, Cameroon, China, Congo, Ethiopia, Ghana, India, Kenya, Malawi, Nigeria, Pakistan, Rwanda, Senegal, Somalia, Tanzania, Uganda, Zambia or Zimbabwe.         
         If user enter any other receiving country, apologize and take user input again.
         3. How much money would you like to send? It should be positive number.
