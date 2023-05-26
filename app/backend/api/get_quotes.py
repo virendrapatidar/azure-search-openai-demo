@@ -33,18 +33,25 @@ class Quotes(Approach):
         
         Please provide your response in the following format
         "Sending country: <sending_country>, Receiving country: <receiving_country>, Amount: <amount>" 
+        
+        This API is also used to calculate fee, exchange rate to send money.
         """
         response = self.openai_handler.get_completion(quote_prompt)
         print("Bot:", response)
         jsonStr = self.parse_values(history)        
         isValid = self.validate_json(jsonStr)
         print ("isValid:" , isValid)
+        result = quote_prompt
         if(isValid):
             response = self.prepare_request(jsonStr)
             self.openai_handler.clear_intent()
             # return self.format_response(response)
-            return str(response)
-        return quote_prompt
+            result = str(response)
+        response = {
+            "prompt": quote_prompt,
+            "result": result
+        }
+        return response
 
     def format_response(self, response):
         response_prompt = "Show JSON response in html table format. \n " + str(response)
@@ -66,7 +73,9 @@ class Quotes(Approach):
         if(jsonStr.startswith("{")):
             try:
                 jsonObj = json.loads(jsonStr)
-                if((jsonObj["amount"] != "" and float(jsonObj["amount"]) > 0) and jsonObj["sending_country"] != "" and jsonObj["receiving_country"] != ""):
+                if((jsonObj["amount"] != "" and float(jsonObj["amount"]) > 0) 
+                   and jsonObj["sending_country"] != "" and jsonObj["sending_country"] is not None 
+                   and jsonObj["receiving_country"] != "" and jsonObj["receiving_country"] is not None):
                     return True
             except:
                 print("not valid json" + jsonStr)
@@ -82,7 +91,6 @@ class Quotes(Approach):
         print("sending_country", jsonObj["sending_country"])
         print("receiving_country", jsonObj["receiving_country"])
         print("amount", jsonObj["amount"])
-
 
         if(jsonObj["sending_country"].lower() == "South Africa" or jsonObj["sending_country"].lower() == "sa"):
             sending_country = 204
@@ -284,16 +292,18 @@ class Quotes(Approach):
         isUk = sending_country == 232
         response = self.request_handler.post_request(endpoint, req_data, isUk)
         print(response)
-        responseAttr = response.get("data").get("attributes")
-        required_json = {
-            "sending_amount" : responseAttr.get("sending_amount"),            
-            "recipient_amount" : responseAttr.get("recipient_amount"),
-            "exchange_rate" : responseAttr.get("rate"),
-            "total_amount_to_pay" : float(responseAttr.get("amount_to_pay")) + float(responseAttr.get("vat")),
-            "fees" : responseAttr.get("fees"),
-            "vat" : responseAttr.get("vat")
-        }
-        return required_json
+        if(response is not None ):
+            responseAttr = response.get("data").get("attributes")
+            required_json = {
+                "sending_amount" : responseAttr.get("sending_amount"),            
+                "recipient_amount" : responseAttr.get("recipient_amount"),
+                "exchange_rate" : responseAttr.get("rate"),
+                "total_amount_to_pay" : float(responseAttr.get("amount_to_pay")) + float(responseAttr.get("vat")),
+                "fees" : responseAttr.get("fees"),
+                "vat" : responseAttr.get("vat")
+            }
+            return required_json
+        return ""
 
     def prepare_quotes_request_json(self, amount, receiving_country, receiving_currency, product, sending_country, sending_currency):
         quote_req_json = {

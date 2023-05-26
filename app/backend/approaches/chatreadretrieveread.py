@@ -80,8 +80,9 @@ Search query:
         if intent.lower() == "action":
             # Define prompt to ask for the amount, sending country, and receiving country
             impl = Quotes(self.gpt_deployment, self.chatgpt_deployment)
-            content = impl.run(history, overrides)
-            results = content
+            response = impl.run(history, overrides)
+            prompt = response["prompt"]
+            content = response["result"]
         else:
             # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
             if overrides.get("semantic_ranker"):
@@ -127,7 +128,7 @@ Search query:
             n=1,
             stop=["<|im_end|>", "<|im_start|>"])
 
-        return {"data_points": results, "answer": completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
+        return {"data_points": content, "answer": completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
 
     
     
