@@ -16,7 +16,6 @@ import re
 class ChatReadRetrieveReadApproach(Approach):
     prompt_prefix = """<|im_start|>system
 Your name is "Sasai Sage" and responding to questions asked by Sasai Employee or Customers. Be brief in your answers.
-For tabular or json information, return it as an html table. Do not return markdown format.
 Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
 Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
 {follow_up_questions_prompt}
@@ -37,6 +36,7 @@ Sources:
     Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
     Do not include any text inside [] or <<>> in the search query terms.
     If the question is not in English, translate the question to English before generating the search query.
+    For tabular or json information, return it as an html table. Do not return markdown format.
 
 Chat History:
 {chat_history}
@@ -123,7 +123,7 @@ Search query:
         completion = openai.Completion.create(
             engine=self.chatgpt_deployment,
             prompt=prompt,
-            temperature=overrides.get("temperature") or 0.8,
+            temperature=overrides.get("temperature") or 0.6,
             max_tokens=1024,
             n=1,
             stop=["<|im_end|>", "<|im_start|>"])

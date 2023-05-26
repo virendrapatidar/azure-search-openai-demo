@@ -93,7 +93,7 @@ class Quotes(Approach):
         print("receiving_country", jsonObj["receiving_country"])
         print("amount", jsonObj["amount"])
 
-        if(jsonObj["sending_country"].lower() == "South Africa" or jsonObj["sending_country"].lower() == "sa"):
+        if(jsonObj["sending_country"].lower() == "south africa" or jsonObj["sending_country"].lower() == "sa"):
             sending_country = 204
             sending_currency = 181
             if(jsonObj["receiving_country"].lower() == "bangladesh" or jsonObj["receiving_country"].lower() == "bd"):
@@ -177,7 +177,7 @@ class Quotes(Approach):
                 receiving_currency = 75
                 product = 24                                             
 
-        elif(jsonObj["sending_country"].lower() == "United Kingdom" or jsonObj["sending_country"].lower() == "uk"):
+        elif(jsonObj["sending_country"].lower() == "united kingdom" or jsonObj["sending_country"].lower() == "uk"):
             sending_country = 232
             sending_currency = 53
             if(jsonObj["receiving_country"].lower() == "bangladesh" or jsonObj["receiving_country"].lower() == "bd"):
@@ -277,8 +277,6 @@ class Quotes(Approach):
                 receiving_currency = 153
                 product = 15
          
-            
-
         endpoint = "calculate/"
         amount = jsonObj["amount"]
 
@@ -293,7 +291,7 @@ class Quotes(Approach):
         isUk = sending_country == 232
         response = self.request_handler.post_request(endpoint, req_data, isUk)
         print(response)
-        if(response is not None ):
+        if(response is not None and response.get("data") is not None):
             responseAttr = response.get("data").get("attributes")
             required_json = {
                 "sending_amount" : responseAttr.get("sending_amount"),            
