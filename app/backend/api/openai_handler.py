@@ -44,7 +44,7 @@ class OpenaiHandler():
         return history_text
     
     def get_intent(self, history) -> str:  
-        intent = None
+        intent = ""
         if 'intent' in session:
             intent = session['intent']
         if intent == None or intent == "" or intent == "\"" or intent == "'" or intent.lower() == "general":
@@ -52,8 +52,7 @@ class OpenaiHandler():
                 intent = self.extract_intent(h.get("user"))
                 session['intent'] = intent    
                 break            
-        return intent
-
+        return intent.strip()
 
     def clear_intent(self) -> str:
-            session['intent'] = None
+            session['intent'] = ""

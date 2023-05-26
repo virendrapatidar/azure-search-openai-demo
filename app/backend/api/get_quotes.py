@@ -64,9 +64,8 @@ class Quotes(Approach):
         quote_prompt = """ Extract Sending country: sending_country, Receiving country: receiving_country, Amount: amount without currency code in json format. Do not return any other text with json        
         """
         jsonStr = self.openai_handler.get_completion(text_history + quote_prompt)
-        if(jsonStr.startswith("{")):
-            jsonStr = re.sub("\n","",jsonStr)
-            jsonStr = re.sub("<\|im_end\|>","",jsonStr)   
+        jsonStr = re.sub("\n","",jsonStr)
+        jsonStr = re.sub("<\|im_end\|>","",jsonStr)   
         print ("jsonStr: " + jsonStr)         
         return jsonStr
         
